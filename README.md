@@ -1,5 +1,5 @@
-# PIC CCS CH376 Driver
- CH376 Driver for Microchip PIC with CCS C Compiler
+# PIC CCS CH376 Library
+ CH376 Library for Microchip PIC with CCS C Compiler
  
 It uses UART to communicate with CH376 USB Host
 Actually it only opens a file for reading.

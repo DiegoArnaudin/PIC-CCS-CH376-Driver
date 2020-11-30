@@ -1,5 +1,5 @@
 #include <main.h>
-#include <CH376Driver.h>
+#include <CH376.h>
 
 void printbuff(char block, *buff){
 	int b,i;

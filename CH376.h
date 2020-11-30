@@ -6,9 +6,8 @@
 
 */
 
-#ifndef CH376DRIVER_H
-#define CH376DRIVER_H
-
+#ifndef CH376_H
+#define CH376_H
 
 /* Configuration defines */
 #define RETRY_DLY 50 
@@ -229,4 +228,4 @@ char InitDevice(){
 	);
 }					
 
-#endif /* CH376DRIVER_H */
+#endif /* CH376_H */
