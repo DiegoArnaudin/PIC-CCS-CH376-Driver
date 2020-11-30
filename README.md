@@ -6,6 +6,7 @@ Actually it only opens a file for reading.
 
 Usage:
 
+
 	- InitDevice()
 		Will try to initialize CH376 device and returns 0 if it fails.
 
