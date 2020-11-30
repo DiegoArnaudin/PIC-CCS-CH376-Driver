@@ -50,3 +50,14 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+*.~*
+*.ccspjt
+*.cod
+*.err
+*.esym
+*.lst
+*.STA
+*.sym
+*.tre
+*.xsym
+*.cof
