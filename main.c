@@ -63,13 +63,14 @@ void main()
 	}
 
 	dbg("Init Ok.\n\r");	
+	
 	const char *f1 = {"/DATA.BIN"};
 	int TryTimes = 3, SuccessLoad = 0;
-	while( !SuccessLoad && TryTimes-- ){
+	do{
+		fprintf(PORTDEBUG,"\r\nTry Load");
 		SuccessLoad = TryLoadFile(f1);
-		fprintf(PORTDEBUG,"\r\nTry.");
 		delay_ms(2000);
-	}
+	}while( !SuccessLoad && TryTimes-- );
 	
 	if(!SuccessLoad)
 		fprintf(PORTDEBUG,"\r\nfailure while loading file");
