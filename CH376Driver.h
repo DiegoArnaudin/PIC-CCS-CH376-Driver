@@ -1,8 +1,8 @@
 /*
-	
+	Author: Diego Arnaudin 
 
 	Problems and solutions:
-		- Won't open file ([FILE_OPEN]): Format with FAT32 or FAT16
+		- Won't open file ([FileOpen]): Format with FAT32 or FAT16, the device does not recognize NTFS format.
 
 */
 
