@@ -215,7 +215,7 @@ char ReadFile( char *buff ){
 	
 	ReadBlock(buff,64);	
 
-	return ByteRdGo()==ANSW_USB_INT_SUCCESS ;
+	return ByteRdGo()==ANSW_USB_INT_SUCCESS;
 }
 
 char InitDevice(){

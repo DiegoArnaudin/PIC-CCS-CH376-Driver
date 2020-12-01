@@ -2,7 +2,7 @@
  CH376 Library for Microchip PIC with CCS C Compiler
  
 It uses UART to communicate with CH376 USB Host
-Actually it only opens a file for reading.
+Currently it only opens a file for reading.
 
 Usage:
 
