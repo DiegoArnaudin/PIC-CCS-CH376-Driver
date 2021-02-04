@@ -158,13 +158,18 @@ char FileOpen(){
 
 char ByteRead(){
    dbg("[ByteRead]\n\r");
-   StartCmd();
-   WriteCH376(CMD_BYTE_READ);
+   char response = 0, retrys = 10;
    
-   WriteCH376(0x40);
-   WriteCH376(0x00);
-   
-   return  ReadCH376() == ANSW_USB_INT_DISK_READ;
+   do{
+	StartCmd();
+	WriteCH376(CMD_BYTE_READ);   
+	WriteCH376(0x40);
+	WriteCH376(0x00);
+	response = ReadCH376();
+	retrys--;
+   }while( response != ANSW_USB_INT_DISK_READ && retrys>0);
+	
+   return  response == ANSW_USB_INT_DISK_READ;
 }
 
 char ReadBlock(char* buff, char length){   
@@ -191,10 +196,17 @@ char ReadBlock(char* buff, char length){
 
 char ByteRdGo(){
    dbg("[ByteRdGo]\n\r");
-   StartCmd();
-   WriteCH376(CMD_BYTE_RD_GO);
    
-   return ReadCH376();
+   char response = 0, retrys = 10;
+   do{
+	StartCmd();
+	WriteCH376(CMD_BYTE_RD_GO);
+	response = ReadCH376();
+	retrys--;
+   }while( response != ANSW_USB_INT_SUCCESS && retrys>0);
+   
+   return response == ANSW_USB_INT_SUCCESS ;
+   
 }
 
 char LoadFile(char *filename){
@@ -215,7 +227,7 @@ char ReadFile( char *buff ){
 	
 	ReadBlock(buff,64);	
 
-	return ByteRdGo()==ANSW_USB_INT_SUCCESS;
+	return ByteRdGo();
 }
 
 char InitDevice(){

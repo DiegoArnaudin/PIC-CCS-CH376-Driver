@@ -20,6 +20,13 @@ void printbar(long block,long totalblocks){
     fprintf(PORTDEBUG, "\r%s",bar);
 }
 
+void PrintPercentage(long block,long totalblocks){
+    long perc = (long)(block)*100/totalblocks;
+
+    fprintf(PORTDEBUG, "\r%lu",perc);
+}
+
+
 char TryLoadFile(char *file){
 	
 	char buff[64] = {0};
@@ -37,7 +44,7 @@ char TryLoadFile(char *file){
 			/* Write Buff to flash memory */
 			
 			
-			printbar(blocks, fileblocks);			
+			PrintPercentage(blocks, fileblocks);			
 			blocks++;
 		}
 		fprintf(PORTDEBUG,"\n\r");
@@ -51,31 +58,37 @@ char TryLoadFile(char *file){
 		return 0;
 }
 
-void main()
-{
+void DetectMediaAndLoad(){
 	int times = 5, deviceOk=0;
 	while(times-- && !deviceOk){
 		if(InitDevice()) deviceOk=1;
 	}
-	if(!deviceOk){
-		fprintf(PORTDEBUG,"\r\nNo media present");
-		while(1);
-	}
+	if(deviceOk){
+		fprintf(PORTDEBUG,"\r\nMedia present");
+		
+		const char *f1 = {"/DATA.BIN"};
+		int TryTimes = 3, SuccessLoad = 0;
+		do{
+			fprintf(PORTDEBUG,"\r\nTry Load");
+			SuccessLoad = TryLoadFile(f1);
+			delay_ms(2000);
+		}while( !SuccessLoad && TryTimes-- );
 
-	dbg("Init Ok.\n\r");	
-	
-	const char *f1 = {"/DATA.BIN"};
-	int TryTimes = 3, SuccessLoad = 0;
-	do{
-		fprintf(PORTDEBUG,"\r\nTry Load");
-		SuccessLoad = TryLoadFile(f1);
-		delay_ms(2000);
-	}while( !SuccessLoad && TryTimes-- );
-	
-	if(!SuccessLoad)
-		fprintf(PORTDEBUG,"\r\nfailure while loading file");
-	else
-		fprintf(PORTDEBUG,"\r\nfile load success");
+		if(!SuccessLoad)
+			fprintf(PORTDEBUG,"\r\nfailure while loading file");
+		else
+			fprintf(PORTDEBUG,"\r\nfile load success");
+	}
+	else{
+		fprintf(PORTDEBUG,"\r\nNo media present");
+	}
+}
+
+void main()
+{
+	DetectMediaAndLoad();
+
+	fprintf(PORTDEBUG,"\r\nApp Init.");
 	
 	while(TRUE);
 }

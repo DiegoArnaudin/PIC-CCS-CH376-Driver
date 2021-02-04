@@ -15,7 +15,7 @@
 #define CHTX PIN_C0
 #define CHRX PIN_C1
 
-#define DBGTX PIN_C6
+#define DBGTX PIN_C5
 
 #use rs232(stream=PORTCH376, baud = 9600 ,parity=N,xmit=CHTX,rcv=CHRX,bits=8, timeout=30)
 
