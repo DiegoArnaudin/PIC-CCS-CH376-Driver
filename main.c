@@ -33,7 +33,7 @@ char TryLoadFile(char *file){
 	
 	if( LoadFile(file) ){
 		long long size = GetFileSize();
-		long fileblocks = ((float)(size)/64)-(long long)(size/64) > 0 ? (long long)(size/64) + 1 :  (long long)(size/64) ;
+		long long fileblocks = ((float)(size)/64)-(long long)(size/64) > 0 ? (long long)(size/64) + 1 :  (long long)(size/64) ;
 		fprintf(PORTDEBUG,"\r\nsize: %lu bytes, blocks: %lu\r\n", size, fileblocks );
 
 		dbg("Reading\n\r");
@@ -73,7 +73,7 @@ void DetectMediaAndLoad(){
 		do{
 			fprintf(PORTDEBUG,"\r\nTry Load");
 			SuccessLoad = TryLoadFile(f1);
-			delay_ms(2000);
+		//	delay_ms(2000);
 		}while( !SuccessLoad && TryTimes-- );
 
 		if(!SuccessLoad)

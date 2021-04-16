@@ -111,7 +111,7 @@ char SetMode(char mode){
 
    ret = ReadCH376();// == ANSW_RET_SUCCESS;
    
-   printf("[%x]",ret);
+  // printf("[%x]",ret);
    
    ret = ret == ANSW_RET_SUCCESS;
    
@@ -148,7 +148,7 @@ char CheckExists(){
    ret = ReadCH376();
    
    
-   printf("[%x]",ret);
+ //  printf("[%x]",ret);
    
    ret = ret == 0xFE;
    
@@ -170,7 +170,7 @@ char DiskConnect(){
 	
 	ret = GetStatus();
    
-   printf("[%x]",ret);
+ //  printf("[%x]",ret);
    
    return ret == ANSW_USB_INT_SUCCESS;
 }
@@ -202,7 +202,7 @@ char DiskMount(){
   // ret = ReadCH376();// == ANSW_USB_INT_SUCCESS;
    ret = GetStatus();   
 
-   printf("[%x]",ret);
+  // printf("[%x]",ret);
    
    return ret  == ANSW_USB_INT_SUCCESS;
 }
@@ -233,7 +233,7 @@ char FileOpen(){
    
    ret = GetStatus();
    
-   printf("[%x]",ret);
+ //  printf("[%x]",ret);
    
    return ret == ANSW_USB_INT_SUCCESS;
    
@@ -282,7 +282,7 @@ char ReadBlock(char* buff, char length){
 	  
    }
    SPIDeselect();
-   printf("size:%d",size);
+  // printf("size:%d",size);
    return size;
 }
 
@@ -319,7 +319,9 @@ char ReadFile( char *buff ){
    
    dbg("\n\r[Read Block]");
    
-   if (!ByteRead()) { printf("\n\rabrime la puertaa"); return 0;}
+   if (!ByteRead()) { 
+	printf("\n\rEND."); 
+   return 0;}
    
    ReadBlock(buff,64);   
 
@@ -329,7 +331,7 @@ char ReadFile( char *buff ){
 void InitSPI(){
    //setup_spi(SPI_MASTER | SPI_L_TO_H | SPI_CLK_DIV_4);
    #ifdef SDCARD_SPI_HW
-   setup_spi( spi_master | spi_l_to_h /*| spi_clk_div_16*/ | SPI_XMIT_L_TO_H);
+   setup_spi( spi_master | spi_l_to_h | spi_clk_div_16 | SPI_XMIT_L_TO_H);
    //#define CH376Xfer(x)    spi_read(x)
    output_float(SDCARD_PIN_INT);
    

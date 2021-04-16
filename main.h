@@ -26,7 +26,7 @@
 #use rs232(stream=PORTDEBUG, baud = 57600, parity=N, xmit=DBGTX, rcv=DBGRX, bits=8)
 
 
-//#define SDCARD_SPI_HW
+#define SDCARD_SPI_HW
 
 #ifndef SDCARD_SPI_HW
    
@@ -40,4 +40,4 @@
 
 
 
-#define dbg(a) fprintf(PORTDEBUG,a)
+#define dbg(a) // fprintf(PORTDEBUG,a)
