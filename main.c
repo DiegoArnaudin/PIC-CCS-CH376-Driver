@@ -1,5 +1,5 @@
 #include <main.h>
-#include <CH376.h>
+#include <CH376SPI.h>
 
 void printbuff(char block, *buff){
 	int b,i;
@@ -9,7 +9,7 @@ void printbuff(char block, *buff){
 			fprintf(PORTDEBUG,"%x",buff[b*16+i]);
 	}
 }
-
+/*
 void printbar(long block,long totalblocks){
     char bar[11] = {".........."};
 
@@ -19,11 +19,11 @@ void printbar(long block,long totalblocks){
 
     fprintf(PORTDEBUG, "\r%s",bar);
 }
-
+*/
 void PrintPercentage(long block,long totalblocks){
     long perc = (long)(block)*100/totalblocks;
 
-    fprintf(PORTDEBUG, "\r%lu",perc);
+    fprintf(PORTDEBUG, "\r\nperc:%lu",perc);
 }
 
 
@@ -43,9 +43,11 @@ char TryLoadFile(char *file){
 		{
 			/* Write Buff to flash memory */
 			
-			
-			PrintPercentage(blocks, fileblocks);			
+		//	printbuff(blocks,buff);
+	//	printf("\n\rblock:%lu",blocks);
+			//PrintPercentage(blocks, fileblocks);			
 			blocks++;
+		//	delay_ms(100);
 		}
 		fprintf(PORTDEBUG,"\n\r");
 
@@ -86,9 +88,16 @@ void DetectMediaAndLoad(){
 
 void main()
 {
+	disable_interrupts(GLOBAL);
+	delay_ms(50);
+	fprintf(PORTDEBUG,"\r\nStart SPI USB.");
 	DetectMediaAndLoad();
 
 	fprintf(PORTDEBUG,"\r\nApp Init.");
 	
 	while(TRUE);
+/*InitSPI();
+	while(1){
+		spi_xfer(0x55);
+	}*/
 }
