@@ -30,6 +30,7 @@
 #define CMD_BYTE_RD_GO 0x3b
 #define CMD_SET_BAUDRATE 
 #define CMD_GET_STATUS 0x22
+#define CMD_SET_SD0_INT 0x0b
 
 /* prototypes declaration */
 
@@ -85,11 +86,10 @@ char TryNTimesP(fun_ptrP func,char p1){
 char GetStatus(){
 	int ret = 0;
 	
-	while(input(SDCARD_PIN_INT)){
-			// timeout
-			//printf(".");
-	}/*
-	printf("\n\r[GetStatus]");*/
+	while(input_state(SDCARD_PIN_INT));
+	
+	//printf("\n\r[GetStatus]");
+	
 	SPISelect();
 	WriteCH376(CMD_GET_STATUS);
 	ret = ReadCH376();
@@ -129,7 +129,17 @@ char ResetAll(){
    WriteCH376(CMD_RESET_ALL);
    SPIDeselect();
    
-   delay_ms(50);
+   delay_ms(100);
+   
+   if (SDCARD_PIN_INT==PIN_C4) {
+	   dbg("\n\rSelect SDO as #INT");
+	   SPISelect();
+	   WriteCH376(CMD_SET_SD0_INT);
+	   WriteCH376(0x16);
+	   WriteCH376(0x90);
+	   SPIDeselect();	   
+   delay_ms(100);
+   }
 
    return 1;
 }
@@ -245,14 +255,10 @@ char ByteRead(){
    
    do{
 	SPISelect();
-	//delay_ms(50);
    WriteCH376(CMD_BYTE_READ);   
    WriteCH376(0x40);
    WriteCH376(0x00);
      SPIDeselect();
-   //response = ReadCH376();
-//	delay_ms(50);
-	//printf("\n\rrraap");
    response = GetStatus();
  //  printf("|resp:%x, retrys: %d",response, retrys);
    retrys--;
@@ -331,9 +337,9 @@ char ReadFile( char *buff ){
 void InitSPI(){
    //setup_spi(SPI_MASTER | SPI_L_TO_H | SPI_CLK_DIV_4);
    #ifdef SDCARD_SPI_HW
-   setup_spi( spi_master | spi_l_to_h | spi_clk_div_16 | SPI_XMIT_L_TO_H);
+   setup_spi( SPI_MASTER | SPI_L_TO_H | SPI_CLK_DIV_16 | SPI_XMIT_L_TO_H);
    //#define CH376Xfer(x)    spi_read(x)
-   output_float(SDCARD_PIN_INT);
+  // output_float(SDCARD_PIN_INT);
    
    #endif
    
@@ -354,7 +360,7 @@ void InitSPI(){
    output_drive(SDCARD_PIN_SELECT);
    output_high(SDCARD_PIN_SELECT);
    
-   delay_ms(100);
+   delay_ms(50);
 }
 
 

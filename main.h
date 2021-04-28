@@ -19,11 +19,13 @@
 #define DBGRX PIN_C7
 
 #define SDCARD_PIN_SELECT PIN_C2
-#define SDCARD_PIN_INT PIN_C0
+//#define SDCARD_PIN_INT PIN_C0
+
+#define SDCARD_PIN_INT PIN_C4
 
 //#use rs232(stream=PORTCH376, baud = 9600 ,parity=N,xmit=CHTX,rcv=CHRX,bits=8, timeout=30)
 
-#use rs232(stream=PORTDEBUG, baud = 57600, parity=N, xmit=DBGTX, rcv=DBGRX, bits=8)
+#use rs232(stream=PORTDEBUG, baud = 19200, parity=N, xmit=DBGTX, rcv=DBGRX, bits=8)
 
 
 #define SDCARD_SPI_HW
@@ -34,10 +36,12 @@
    #define SDCARD_PIN_SDO PIN_C5
    #define SDCARD_PIN_SCL PIN_C3
    
-   //#use spi(MASTER, DI=SDCARD_PIN_SDI, DO=SDCARD_PIN_SDO, CLK=SDCARD_PIN_SCL, BITS=8, LSB_FIRST, MODE=3, baud=500000)
    #use spi(MASTER, SPI1, MODE=0,/* baud=500000,*/ stream=SPI_USB, MSB_FIRST)
 #endif
 
-
-
-#define dbg(a) // fprintf(PORTDEBUG,a)
+//#define DEBUG
+#ifdef DEBUG
+	#define dbg(a)  fprintf(PORTDEBUG,a)
+#else
+	#define dbg(a)
+#endif
