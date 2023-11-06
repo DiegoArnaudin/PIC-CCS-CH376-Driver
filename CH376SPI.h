@@ -39,8 +39,6 @@
 #define WriteCH376(x)  spi_write(x)
 #define ReadCH376() spi_read(0xff)
 
-
-//#define StartCmd() fprintf(PORTCH376,"%s",_start)
 #define SPISelect() output_low(SDCARD_PIN_SELECT);
 #define SPIDeselect() output_high(SDCARD_PIN_SELECT);
 
@@ -59,323 +57,326 @@ char GetStatus();
 char InitDevice();
 
 typedef char (*fun_ptr)();
-char TryNTimes(fun_ptr func){
-   char r=0x00, retrys = 0;      
-   do{
-      r = func();
-     delay_ms(RETRY_DLY);
-   }while(!r && (++retrys)<RETRY_TIMES);
-   
-   return r;
+char TryNTimes(fun_ptr func)
+{
+	char r=0x00, retrys = 0;
+	do {
+		r = func();
+		delay_ms(RETRY_DLY);
+	} while(!r && (++retrys)<RETRY_TIMES);
+
+	return r;
 }
 
 typedef char (*fun_ptrP)(char);
-char TryNTimesP(fun_ptrP func,char p1){
-   char r=0x00, retrys = 0;      
-   do{
-      r = func(p1);
-     delay_ms(RETRY_DLY);
-   }while(!r && (++retrys)<RETRY_TIMES);
-   
-   return r;
+char TryNTimesP(fun_ptrP func,char p1)
+{
+	char r=0x00, retrys = 0;      
+	do {
+		r = func(p1);
+		delay_ms(RETRY_DLY);
+	} while(!r && (++retrys)<RETRY_TIMES);
+
+	return r;
 }
 
 
 /* functions definitions */
 
-char GetStatus(){
+char GetStatus()
+{
 	int ret = 0;
-	
-	while(input_state(SDCARD_PIN_INT));
-	
-	//printf("\n\r[GetStatus]");
+
+	while (input_state(SDCARD_PIN_INT));
 	
 	SPISelect();
 	WriteCH376(CMD_GET_STATUS);
 	ret = ReadCH376();
 	SPIDeselect();
-	
+
 	return ret;
 }
 
-char SetMode(char mode){
-   char ret = 0;
-   
-   dbg("\n\r[SetMode]");
+char SetMode(char mode)
+{
+	char ret = 0;
 
-   SPISelect();   
-   WriteCH376(CMD_SET_USB_MODE);   
-   WriteCH376(mode);
-   
-   delay_us(10);
+	dbg("\n\r[SetMode]");
 
-   ret = ReadCH376();// == ANSW_RET_SUCCESS;
-   
-  // printf("[%x]",ret);
-   
-   ret = ret == ANSW_RET_SUCCESS;
-   
-   SPIDeselect();
-   
-   delay_us(20);
-   
-   return ret;
+	SPISelect();   
+	WriteCH376(CMD_SET_USB_MODE);   
+	WriteCH376(mode);
+
+	delay_us(10);
+
+	ret = ReadCH376();
+	ret = ret == ANSW_RET_SUCCESS;
+
+	SPIDeselect();
+
+	delay_us(20);
+
+	return ret;
 }
 
-char ResetAll(){
-   dbg("\n\r[ResetAll]");
-   
-   SPISelect();
-   WriteCH376(CMD_RESET_ALL);
-   SPIDeselect();
-   
-   delay_ms(100);
-   
-   if (SDCARD_PIN_INT==PIN_C4) {
-	   dbg("\n\rSelect SDO as #INT");
-	   SPISelect();
-	   WriteCH376(CMD_SET_SD0_INT);
-	   WriteCH376(0x16);
-	   WriteCH376(0x90);
-	   SPIDeselect();	   
-   delay_ms(100);
-   }
+char ResetAll()
+{
+	dbg("\n\r[ResetAll]");
 
-   return 1;
+	SPISelect();
+	WriteCH376(CMD_RESET_ALL);
+	SPIDeselect();
+
+	delay_ms(100);
+
+	if (SDCARD_PIN_INT==PIN_C4) {
+		dbg("\n\rSelect SDO as #INT");
+		SPISelect();
+		WriteCH376(CMD_SET_SD0_INT);
+		WriteCH376(0x16);
+		WriteCH376(0x90);
+		SPIDeselect();	   
+		delay_ms(100);
+	}
+
+	return 1;
 }
 
-char CheckExists(){
-   char ret = 0;
-   
-  // SetInt();
-   
-   dbg("\n\r[CheckExists]");
+char CheckExists()
+{
+	char ret = 0;
 
-   SPISelect();
-   WriteCH376(CMD_CHECK_EXIST);
-   
-   WriteCH376(0x01);
-   ret = ReadCH376();
-   
-   
- //  printf("[%x]",ret);
-   
-   ret = ret == 0xFE;
-   
-   SPIDeselect();
-   
-   return ret;
-   
-}
+	dbg("\n\r[CheckExists]");
 
-char DiskConnect(){
-   char ret = 0;
-   
-   dbg("\n\r[DiskConnect]");
-   SPISelect();
-   WriteCH376(CMD_DISK_CONNECT);
-   //ret = ReadCH376();
-   
-   SPIDeselect();
+	SPISelect();
+	WriteCH376(CMD_CHECK_EXIST);
+	WriteCH376(0x01);
 	
+	ret = ReadCH376();
+	
+	int count = 3;
+	while(ret!=0xFE && count--){		
+		SPISelect();
+		
+		WriteCH376(CMD_CHECK_EXIST);		
+		WriteCH376(0x01);
+		
+		ret = ReadCH376();
+		dbg2("%c",ret);
+		SPIDeselect();
+	}	
+	
+	SPIDeselect();
+
+	return ret==0xFE;
+}
+
+char DiskConnect()
+{
+	char ret = 0;
+
+	dbg("\n\r[DiskConnect]");
+	SPISelect();
+	WriteCH376(CMD_DISK_CONNECT);
+	
+	SPIDeselect();
+
 	ret = GetStatus();
-   
- //  printf("[%x]",ret);
-   
-   return ret == ANSW_USB_INT_SUCCESS;
+
+	return ret == ANSW_USB_INT_SUCCESS;
 }
 
-long long GetFileSize(){
-   dbg("\n\r[GetFileSize]");
-   
-   SPISelect();
-   WriteCH376(0x0c);
-   WriteCH376(0x68);
-   char a=0,b=0,c=0,d=0;
-   a=ReadCH376();
-   b=ReadCH376();
-   c=ReadCH376();
-   d=ReadCH376();
-   SPIDeselect();
-   
-   long long n = (long long) ((long long)d<<24) | ((long long)c<<16) |((long long)b<<8) | a;
-   
-   return n;
-}
+long long GetFileSize()
+{
+	char a=0,b=0,c=0,d=0;
+	
+	dbg("\n\r[GetFileSize]");
 
-char DiskMount(){
-   char ret = 0;
-   dbg("\n\r[DiskMount]");
-   SPISelect();
-   WriteCH376(CMD_DISK_MOUNT);
-   SPIDeselect();
-  // ret = ReadCH376();// == ANSW_USB_INT_SUCCESS;
-   ret = GetStatus();   
-
-  // printf("[%x]",ret);
-   
-   return ret  == ANSW_USB_INT_SUCCESS;
-}
-
-char SetFileName(char *filename){
-   dbg("\n\r[SetFileName]");
-
-   SPISelect();
-   WriteCH376(CMD_SET_FILE_NAME);
-
-   int i=0;
-   do{
-   WriteCH376(filename[i]);
-   }while(filename[i++]!='\0');
-   
-   SPIDeselect();
-
-   return 1; 
-}
-
-char FileOpen(){
-   char ret = 0;
-   dbg("\n\r[FileOpen]");
-   SPISelect();
-   WriteCH376(CMD_FILE_OPEN);
-  // ret = ReadCH376();
-   SPIDeselect();
-   
-   ret = GetStatus();
-   
- //  printf("[%x]",ret);
-   
-   return ret == ANSW_USB_INT_SUCCESS;
-   
-}
-
-char ByteRead(){
-   dbg("\n\r[ByteRead]");
-   char response = 0, retrys = 10;
-   
-   do{
 	SPISelect();
-   WriteCH376(CMD_BYTE_READ);   
-   WriteCH376(0x40);
-   WriteCH376(0x00);
-     SPIDeselect();
-   response = GetStatus();
- //  printf("|resp:%x, retrys: %d",response, retrys);
-   retrys--;
-   }while( ((response != ANSW_USB_INT_DISK_READ) /*|| (response != ANSW_USB_INT_SUCCESS) */ ) && retrys>0);
-   
- 
-   
-   return  (response == ANSW_USB_INT_DISK_READ) /*|| (response == ANSW_USB_INT_SUCCESS)*/;
+	WriteCH376(0x0c);
+	WriteCH376(0x68);
+	a=ReadCH376();
+	b=ReadCH376();
+	c=ReadCH376();
+	d=ReadCH376();
+	SPIDeselect();
+
+	long long n = (long long) ((long long)d<<24) | ((long long)c<<16) |((long long)b<<8) | a;
+
+	return n;
 }
 
-char ReadBlock(char* buff, char length){   
-   int i=0;
-   int size=0;
+char DiskMount()
+{
+	char ret = 0;
 
-   dbg("\n\r[ReadBlock]");
-   SPISelect();
-   do{
-
-      WriteCH376(CMD_RD_USB_DATA0);
-   
-      i = size = ReadCH376();   
-   }
-   while(size == 0);   
-      
-   while(i--){
-      *(buff++) = ReadCH376();
-	  
-   }
-   SPIDeselect();
-  // printf("size:%d",size);
-   return size;
-}
-
-
-char ByteRdGo(){
-   dbg("\n\r[ByteRdGo]");
-   
-   
-   char response = 0, retrys = 10;
-   do{
+	dbg("\n\r[DiskMount]");
 	SPISelect();
-   WriteCH376(CMD_BYTE_RD_GO);
-    SPIDeselect();
-   //response = ReadCH376();
-   response = GetStatus();
-   retrys--;
-   }while( ( (response != ANSW_USB_INT_SUCCESS) /*|| (response != ANSW_USB_INT_DISK_READ)*/  ) && retrys>0);
-  
-   return (response == ANSW_USB_INT_SUCCESS) /*|| (response == ANSW_USB_INT_DISK_READ) */ ;
-   
+	WriteCH376(CMD_DISK_MOUNT);
+	SPIDeselect();
+
+	ret = GetStatus();
+	return ret  == ANSW_USB_INT_SUCCESS;
 }
 
-char LoadFile(char *filename){
-   int size = 0;
-   dbg("\n\r(LoadFile)");
-   
-   SetFileName(filename);
-   
-   return FileOpen();
+char SetFileName(char *filename)
+{
+	dbg("\n\r[SetFileName]");
+
+	SPISelect();
+	WriteCH376(CMD_SET_FILE_NAME);
+
+	int i=0;
+	do {
+		WriteCH376(filename[i]);
+	} while(filename[i++]!='\0');
+
+	SPIDeselect();
+
+	return 1; 
 }
 
-char ReadFile( char *buff ){
-   int size = 0;
-   
-   dbg("\n\r[Read Block]");
-   
-   if (!ByteRead()) { 
-	printf("\n\rEND."); 
-   return 0;}
-   
-   ReadBlock(buff,64);   
+char FileOpen()
+{
+	char ret = 0;
+	dbg("\n\r[FileOpen]");
+	SPISelect();
+	WriteCH376(CMD_FILE_OPEN);
 
-   return ByteRdGo();
+	SPIDeselect();
+
+	ret = GetStatus();
+
+	return ret == ANSW_USB_INT_SUCCESS;
 }
 
-void InitSPI(){
-   //setup_spi(SPI_MASTER | SPI_L_TO_H | SPI_CLK_DIV_4);
-   #ifdef SDCARD_SPI_HW
-   setup_spi( SPI_MASTER | SPI_L_TO_H | SPI_CLK_DIV_16 | SPI_XMIT_L_TO_H);
-   //#define CH376Xfer(x)    spi_read(x)
-  // output_float(SDCARD_PIN_INT);
-   
-   #endif
-   
-  #ifndef SDCARD_SPI_HW
-     #if defined(SDCARD_PIN_SCL)
-      output_drive(SDCARD_PIN_SCL);
-     #endif
-     #if defined(SDCARD_PIN_SDO)
-      output_drive(SDCARD_PIN_SDO);
-     #endif
-     #if defined(SDCARD_PIN_SDI)
-      output_float(SDCARD_PIN_SDI);
-     #endif
-	 
-	 spi_init(SPI_USB, 500000);
-   #endif
-  
-   output_drive(SDCARD_PIN_SELECT);
-   output_high(SDCARD_PIN_SELECT);
-   
-   delay_ms(50);
+char ByteRead()
+{
+	dbg("\n\r[ByteRead]");
+	char response = 0, retrys = 10;
+
+	do {
+		SPISelect();
+		WriteCH376(CMD_BYTE_READ);   
+		WriteCH376(0x40);
+		WriteCH376(0x00);
+		SPIDeselect();
+		response = GetStatus();
+
+		retrys--;
+	} while( ((response != ANSW_USB_INT_DISK_READ) /*|| (response != ANSW_USB_INT_SUCCESS) */ ) && retrys>0);
+
+	return (response == ANSW_USB_INT_DISK_READ) /*|| (response == ANSW_USB_INT_SUCCESS)*/;
+}
+
+char ReadBlock(char* buff, char length)
+{   
+	int i=0;
+	int size=0;
+
+	dbg("\n\r[ReadBlock]");
+	SPISelect();
+	do {
+		WriteCH376(CMD_RD_USB_DATA0);
+		i = size = ReadCH376();   
+	}
+	while (size == 0);   
+
+	while (i--) {
+		*(buff++) = ReadCH376();
+	}
+	SPIDeselect();
+	return size;
+}
+
+
+char ByteRdGo()
+{
+	dbg("\n\r[ByteRdGo]");
+	
+	char response = 0, retrys = 10;
+	do {
+		SPISelect();
+		WriteCH376(CMD_BYTE_RD_GO);
+		SPIDeselect();
+		//response = ReadCH376();
+		response = GetStatus();
+		retrys--;
+	} while( ( (response != ANSW_USB_INT_SUCCESS) /*|| (response != ANSW_USB_INT_DISK_READ)*/  ) && retrys>0);
+
+	return (response == ANSW_USB_INT_SUCCESS) /*|| (response == ANSW_USB_INT_DISK_READ) */ ;
+}
+
+char LoadFile(char *filename)
+{
+	int size = 0;
+	dbg("\n\r(LoadFile)");
+
+	SetFileName(filename);
+
+	return FileOpen();
+}
+
+char ReadFile( char *buff )
+{
+	int size = 0;
+
+	dbg("\n\r[Read Block]");
+
+	if (!ByteRead()) { 
+		dbg("\n\rEND."); 
+		return 0;
+	}
+
+	ReadBlock(buff,64);   
+
+	return ByteRdGo();
+}
+
+void InitSPI()
+{
+	//setup_spi(SPI_MASTER | SPI_L_TO_H | SPI_CLK_DIV_4);
+	#ifdef SDCARD_SPI_HW
+	setup_spi( SPI_MASTER | SPI_L_TO_H | SPI_CLK_DIV_16 | SPI_XMIT_L_TO_H);
+	//#define CH376Xfer(x)    spi_read(x)
+	// output_float(SDCARD_PIN_INT);
+
+	#endif
+
+	#ifndef SDCARD_SPI_HW
+	#if defined(SDCARD_PIN_SCL)
+	output_drive(SDCARD_PIN_SCL);
+	#endif
+	#if defined(SDCARD_PIN_SDO)
+	output_drive(SDCARD_PIN_SDO);
+	#endif
+	#if defined(SDCARD_PIN_SDI)
+	output_float(SDCARD_PIN_SDI);
+	#endif
+
+	spi_init(SPI_USB, 500000);
+	#endif
+
+	output_drive(SDCARD_PIN_SELECT);
+	output_high(SDCARD_PIN_SELECT);
+
+	delay_ms(50);
 }
 
 
 
-char InitDevice(){
-   InitSPI();
-   
-   return (
-      ResetAll() &&
-      TryNTimes(&CheckExists) &&
-      TryNTimesP(&SetMode, 0x05) &&
-      TryNTimesP(&SetMode, 0x06) &&
-      TryNTimes(&DiskConnect) &&
-      TryNTimes(&DiskMount) 
-   );
+char InitDevice()
+{
+	InitSPI();
+
+	return (
+		ResetAll() &&
+		TryNTimes(&CheckExists) &&
+		TryNTimesP(&SetMode, 0x05) &&
+		TryNTimesP(&SetMode, 0x06) &&
+		TryNTimes(&DiskConnect) &&
+		TryNTimes(&DiskMount) 
+	);
 }               
 
 #endif /* CH376_H */
