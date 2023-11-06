@@ -10,23 +10,38 @@
 #fuses   NOCPD
 #fuses   NOWRT
 
-#use delay(crystal=32MHz)
+#use delay(internal=32MHz)
 
 #define CHTX PIN_C0
 #define CHRX PIN_C1
 
-#define DBGTX PIN_C5
+#define DBGTX PIN_C6
+#define DBGRX PIN_C7
 
-#use rs232(stream=PORTCH376, baud = 9600 ,parity=N,xmit=CHTX,rcv=CHRX,bits=8, timeout=30)
+#define SDCARD_PIN_SELECT PIN_C2
+//#define SDCARD_PIN_INT PIN_C0
 
-#use rs232(stream=PORTDEBUG, baud = 57600 ,parity=N,xmit=DBGTX,bits=8)
+#define SDCARD_PIN_INT PIN_C4
+
+//#use rs232(stream=PORTCH376, baud = 9600 ,parity=N,xmit=CHTX,rcv=CHRX,bits=8, timeout=30)
+
+#use rs232(stream=PORTDEBUG, baud = 19200, parity=N, xmit=DBGTX, rcv=DBGRX, bits=8)
+
+
+#define SDCARD_SPI_HW
+
+#ifndef SDCARD_SPI_HW
+   
+   #define SDCARD_PIN_SDI PIN_C4
+   #define SDCARD_PIN_SDO PIN_C5
+   #define SDCARD_PIN_SCL PIN_C3
+   
+   #use spi(MASTER, SPI1, MODE=0,/* baud=500000,*/ stream=SPI_USB, MSB_FIRST)
+#endif
 
 //#define DEBUG
 #ifdef DEBUG
-	#define dbg(a) fprintf(PORTDEBUG,a)
-	#define dbg2(a,b) fprintf(PORTDEBUG,a,b)
+	#define dbg(a)  fprintf(PORTDEBUG,a)
 #else
-	#define dbg(a) 
-	#define dbg2(a,b)
+	#define dbg(a)
 #endif
-

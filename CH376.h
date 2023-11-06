@@ -34,9 +34,16 @@
 /* prototypes declaration */
 
 const char _start[]={0x57,0xab,0x00};
-#define StartCmd(); fprintf(PORTCH376,"%s",_start);
-#define WriteCH376(a) fputc(a,PORTCH376)
-#define ReadCH376() fgetc(PORTCH376)
+
+
+#ifndef CH376_SPI_HW
+	#define WriteCH376(a) fputc(a,PORTCH376)
+	#define ReadCH376() fgetc(PORTCH376)
+	#define StartCmd() 
+#else
+	#define CH376Xfer(x) spi_read(x)
+	#define StartCmd() fprintf(PORTCH376,"%s",_start)
+#endif	
 
 char SetMode(char mode);
 char ResetAll();
@@ -136,7 +143,7 @@ char DiskMount(){
 }
 
 char SetFileName(char *filename){
-   dbg2("[SetFileName: %s]\n\r", filename);
+   dbg("[SetFileName]\n\r");
    StartCmd();
    WriteCH376(CMD_SET_FILE_NAME);
    
@@ -220,14 +227,23 @@ char LoadFile(char *filename){
 
 char ReadFile( char *buff ){
 	int size = 0;
-	static int block = 0;
-	dbg2("\r[Read Block: %d]\n\r",block++);
+	
+	dbg("\r[Read Block]\n\r");
 	
 	if (!ByteRead()) return 0;
 	
 	ReadBlock(buff,64);	
 
 	return ByteRdGo();
+}
+
+char InitSPI(){
+	setup_spi(SPI_MASTER | SPI_H_TO_L | SPI_CLK_DIV_64 | SPI_XMIT_L_TO_H);
+	#define sdcard_xfer(x)    spi_read(x)
+	
+	output_high(SDCARD_PIN_SELECT);
+	output_drive(SDCARD_PIN_SELECT);
+	delay_ms(200);
 }
 
 char InitDevice(){
